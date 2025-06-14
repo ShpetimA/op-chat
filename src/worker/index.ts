@@ -1,6 +1,19 @@
-import { Hono } from "hono";
-const app = new Hono<{ Bindings: Env }>();
+import { routeAgentRequest } from "agents";
+import { ConversationDO } from "./conversation";
 
-app.get("/api/", (c) => c.json({ name: "Cloudflare" }));
+export default {
+  async fetch(request: Request, env: Env) {
+    if (!env.OPENAI_API_KEY) {
+      console.error(
+        "OPENAI_API_KEY is not set, don't forget to set it locally in .dev.vars, and use `wrangler secret bulk .dev.vars` to upload it to production"
+      );
+    }
 
-export default app;
+    return (
+      (await routeAgentRequest(request, env)) ||
+      new Response("Not found", { status: 404 })
+    );
+  },
+} satisfies ExportedHandler<Env>;
+
+export { ConversationDO };

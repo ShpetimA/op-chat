@@ -1,65 +1,84 @@
-// src/App.tsx
-
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
-import cloudflareLogo from "./assets/Cloudflare_Logo.svg";
-import honoLogo from "./assets/hono.svg";
+import { useRef, useState } from "react";
 import "./App.css";
+import { useAgent } from "agents/react";
+import { ConversationState } from "../worker/conversation";
 
 function App() {
-  const [count, setCount] = useState(0);
-  const [name, setName] = useState("unknown");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [selectedConversation, setSelectedConversation] = useState<
+    string | null
+  >(null);
+  const [agentState, setAgentState] = useState<ConversationState>({
+    conversations: {},
+  });
+  const connection = useAgent<ConversationState>({
+    agent: "CONVERSATION_DO",
+    name: "just",
+    onStateUpdate: (state) => {
+      setAgentState(state);
+    },
+  });
 
+  const sendMessage = async () => {
+    connection.send(
+      JSON.stringify({
+        type: "message",
+        conversationId: selectedConversation,
+        prompt: inputRef.current?.value,
+      })
+    );
+  };
+
+  const newConversation = () => {
+    connection.send(
+      JSON.stringify({
+        type: "set-conversation",
+      })
+    );
+  };
+
+  const selectConversation = (conversationId: string) => {
+    setSelectedConversation(conversationId);
+  };
+
+  const messages = agentState.conversations[selectedConversation ?? ""];
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-        <a href="https://hono.dev/" target="_blank">
-          <img src={honoLogo} className="logo cloudflare" alt="Hono logo" />
-        </a>
-        <a href="https://workers.cloudflare.com/" target="_blank">
-          <img
-            src={cloudflareLogo}
-            className="logo cloudflare"
-            alt="Cloudflare logo"
-          />
-        </a>
-      </div>
-      <h1>Vite + React + Hono + Cloudflare</h1>
-      <div className="card">
-        <button
-          onClick={() => setCount((count) => count + 1)}
-          aria-label="increment"
-        >
-          count is {count}
+    <div className="app">
+      <div className="sidebar">
+        <h1>Chat</h1>
+        <button id="new-conversation" onClick={newConversation}>
+          New Conversation
         </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+        <div>
+          {Object.keys(agentState.conversations).map((conversationId) => {
+            return (
+              <div
+                key={conversationId}
+                onClick={() => selectConversation(conversationId)}
+              >
+                {conversationId.slice(0, 10)}
+              </div>
+            );
+          })}
+        </div>
       </div>
-      <div className="card">
-        <button
-          onClick={() => {
-            fetch("/api/")
-              .then((res) => res.json() as Promise<{ name: string }>)
-              .then((data) => setName(data.name));
-          }}
-          aria-label="get name"
-        >
-          Name from API is: {name}
-        </button>
-        <p>
-          Edit <code>worker/index.ts</code> to change the name
-        </p>
+      <div className="content">
+        <div className="messages">
+          {messages &&
+            Object.entries(messages).map(([messageId, message]) => (
+              <div key={messageId}>
+                {message.role}: {message.content}
+              </div>
+            ))}
+        </div>
+        <div className="input-container">
+          <input type="text" id="input" ref={inputRef} />
+          <button id="send" onClick={sendMessage}>
+            Send
+          </button>
+        </div>
       </div>
-      <p className="read-the-docs">Click on the logos to learn more</p>
-    </>
+    </div>
   );
 }
 

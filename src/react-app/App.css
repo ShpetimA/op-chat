@@ -1,8 +1,46 @@
 #root {
-  max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
   text-align: center;
+  width: 100%;
+}
+
+.app {
+  display: flex;
+  width: 100%;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100vh;
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .input-container {
+    display: flex;
+    flex-direction: column;
+    margin-top: auto;
+  }
+}
+
+
+.sidebar {
+  width: 200px;
+  border-right: 1px solid #ccc;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.user {
+  text-align: right;
+}
+
+.assistant {
+  text-align: left;
 }
 
 .logo {
@@ -11,12 +49,15 @@
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
+
 .logo.cloudflare:hover {
   filter: drop-shadow(0 0 2em #f6821faa);
 }
@@ -25,6 +66,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
